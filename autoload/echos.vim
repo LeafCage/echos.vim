@@ -71,9 +71,9 @@ function! s:Parser._get_sqstrpair_i(bgni) "{{{
   return i
 endfunction
 "}}}
-function! s:Parser._get_nest_lasti(list) "{{{
+function! s:Parser._get_nest_lasti(list, bgni) "{{{
   let lv = 1
-  let i = self.i
+  let i = a:bgni
   while lv
     let i = match(self.argsstr, '[' . a:list[2]. a:list[1]. '''"]', i+1)
     if i==-1
@@ -105,20 +105,28 @@ function! s:Parser._lumplasti_of_sqstr() "{{{
 endfunction
 "}}}
 function! s:Parser._lumplasti_of_list() "{{{
-  return self._get_nest_lasti(['list', '[', ']'])
+  return self._get_nest_lasti(['list', '[', ']'], self.i)
 endfunction
 "}}}
 function! s:Parser._lumplasti_of_dict() "{{{
-  return self._get_nest_lasti(['dictionary', '{', '}'])
+  return self._get_nest_lasti(['dictionary', '{', '}'], self.i)
 endfunction
 "}}}
 function! s:Parser._lumplasti_of_paren() "{{{
-  return self._get_nest_lasti(['parentheses', '(', ')'])
+  return self._get_nest_lasti(['parentheses', '(', ')'], self.i)
 endfunction
 "}}}
 function! s:Parser._lumplasti_of_eval() "{{{
+  let funcbgn_stopi = matchend(self.argsstr, '^\%([sg]:\)\?[[:alnum:]#]\+(', self.i)
+  if funcbgn_stopi!=-1
+    return self._lumplasti_of_function(funcbgn_stopi-1)
+  end
   let stop = match(self.argsstr, '[[:blank:]''"]', self.i+1)
   return stop==-1 ? self.argslen-1 : stop-1
+endfunction
+"}}}
+function! s:Parser._lumplasti_of_function(funcbgn_i) "{{{
+  return self._get_nest_lasti(['function', '(', ')'], a:funcbgn_i)
 endfunction
 "}}}
 
