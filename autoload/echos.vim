@@ -3,7 +3,10 @@ let s:save_cpo = &cpo| set cpo&vim
 scriptencoding utf-8
 "=============================================================================
 let s:TYPES = {"'": 'sqstr', '"': 'dqstr', '[': 'list', '{': 'dict', '(': 'paren'}
-let s:OPERATORS = '^\%([-+.*/%?:]\|is\%(not\)\?\|[=!][=~][#?]\?\|[<>]=\?[#?]\?\|&&\|||\)'
+let s:OPERATORS = '\%([-+.*/%?:]\|\<is\%(not\)\?\>\|[=!][=~][#?]\?\|[<>]=\?[#?]\?\|&&\|||\)'
+let s:OPERATORS_H = '^'. s:OPERATORS
+let s:OPERATORS_L = s:OPERATORS. '$'
+unlet s:OPERATORS
 
 "Misc:
 let s:Parser = {}
@@ -21,28 +24,16 @@ function! s:Parser.is_continue() "{{{
 endfunction
 "}}}
 function! s:Parser.parse() "{{{
-  let lasti = self._get_lumplasti()
-  let lump = self.argsstr[self.i : lasti]
-  let self.i = match(self.argsstr, '\S', lasti+1)
-  let lump .= self._eval_operator()
-  call add(self.lumps, lump)
-endfunction
-"}}}
-function! s:Parser.get_result() "{{{
-  return self.lumps
-endfunction
-"}}}
-function! s:Parser._get_lumplasti() "{{{
-  return self['_lumplasti_of_'. get(s:TYPES, self.argsstr[self.i], 'eval')]()
-endfunction
-"}}}
-function! s:Parser._eval_operator() "{{{
-  if self.i==-1
-    return ''
-  end
-  let lump = ''
-  let operatorend = matchend(self.argsstr, s:OPERATORS, self.i)
-  while operatorend!=-1
+  let lump = self._get_lump()
+  while self.i != -1
+    if lump =~# s:OPERATORS_L
+      let lump .= self._get_lump()
+      continue
+    end
+    let operatorend = matchend(self.argsstr, s:OPERATORS_H, self.i)
+    if operatorend==-1
+      break
+    end
     let i = match(self.argsstr, '\S', operatorend)
     if i==-1
       echoerr 'invalid opperator "'. self.argsstr[self.i :]. '"'
@@ -50,12 +41,24 @@ function! s:Parser._eval_operator() "{{{
     end
     let lump .= self.argsstr[self.i : operatorend-1]
     let self.i = i
-    let lasti = self._get_lumplasti()
-    let lump .= self.argsstr[self.i : lasti]
-    let self.i = match(self.argsstr, '\S', lasti+1)
-    let operatorend = matchend(self.argsstr, s:OPERATORS, self.i)
+    let lump .= self._get_lump()
   endwhile
+  call add(self.lumps, lump)
+endfunction
+"}}}
+function! s:Parser.get_result() "{{{
+  return self.lumps
+endfunction
+"}}}
+function! s:Parser._get_lump() "{{{
+  let lasti = self._get_lumplasti()
+  let lump = self.argsstr[self.i : lasti]
+  let self.i = match(self.argsstr, '\S', lasti+1)
   return lump
+endfunction
+"}}}
+function! s:Parser._get_lumplasti() "{{{
+  return self['_lumplasti_of_'. get(s:TYPES, self.argsstr[self.i], 'eval')]()
 endfunction
 "}}}
 function! s:Parser._get_dqstrpair_i(bgni) "{{{
