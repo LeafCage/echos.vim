@@ -146,8 +146,8 @@ endfunction
 "}}}
 
 let s:TYPE_STR = type('')
-function! echos#stringify(val) "{{{
-  return (type(a:val)==s:TYPE_STR ? a:val : string(a:val)). ' '
+function! echos#stringify(val, bang) "{{{
+  return (type(a:val)!=s:TYPE_STR ? string(a:val) : a:bang ? '"'.a:val.'"' : a:val). ' '
 endfunction
 "}}}
 
