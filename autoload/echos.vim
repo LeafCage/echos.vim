@@ -145,9 +145,23 @@ function! echos#parse_args(argsstr) "{{{
 endfunction
 "}}}
 
+let s:results = []
+function! echos#pile_stack() "{{{
+  call insert(s:results, '')
+endfunction
+"}}}
+function! echos#stack_add(result) "{{{
+  let s:results[0] .= a:result
+endfunction
+"}}}
+function! echos#stack_release() "{{{
+  return s:results==[] ? '' : remove(s:results, 0)
+endfunction
+"}}}
+
 let s:TYPE_STR = type('')
-function! echos#stringify(val, bang) "{{{
-  return (type(a:val)!=s:TYPE_STR ? string(a:val) : a:bang ? '"'.a:val.'"' : a:val). ' '
+function! echos#stringify(val, visible_str) "{{{
+  return (type(a:val)!=s:TYPE_STR ? string(a:val) : a:visible_str ? '"'.a:val.'"' : a:val). ' '
 endfunction
 "}}}
 

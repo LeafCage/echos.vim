@@ -3,8 +3,10 @@ let s:save_cpo = &cpo| set cpo&vim
 "=============================================================================
 let g:echos_enable_visible_str = get(g:, 'echos_enable_visible_str', 0)
 
-command! -nargs=+ -complete=expression -bang   Echos  let s:ret = '' | for s:arg in echos#parse_args(<q-args>)
-  \ | let s:ret .= echos#stringify(eval(s:arg), <bang>g:echos_enable_visible_str) | endfor | echom s:ret | unlet s:ret s:arg
+command! -nargs=+ -complete=expression   Echos  try | call echos#pile_stack()
+  \ | for s:arg in echos#parse_args(<q-args>)
+  \ | call echos#stack_add(echos#stringify(eval(s:arg), g:echos_enable_visible_str))
+  \ | endfor | finally | echom echos#stack_release() | endtry | unlet! s:arg
 
 "=============================================================================
 "END "{{{1
