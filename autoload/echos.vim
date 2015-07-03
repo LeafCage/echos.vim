@@ -120,7 +120,7 @@ function! s:Parser._lumplasti_of_paren() "{{{
 endfunction
 "}}}
 function! s:Parser._lumplasti_of_eval() "{{{
-  let funcbgn_stopi = matchend(self.argsstr, '^\%([sg]:\)\?[[:alnum:]#]\+(', self.i)
+  let funcbgn_stopi = matchend(self.argsstr, '^\%(\a:\)\?[[:alnum:]#._]\+(', self.i)
   if funcbgn_stopi!=-1
     return self._lumplasti_of_function(funcbgn_stopi-1)
   end
